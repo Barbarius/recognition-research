@@ -13,6 +13,8 @@ from keras.models import load_model
 from keras.models import Model
 from keras.layers import Flatten
 from keras.layers import Dense
+from keras import metrics
+from matplotlib import pyplot
 import tensorflow as tf
 import numpy as np
 import sys
@@ -67,9 +69,9 @@ def create_trainable_resnet50(classes_count):
 	predictions = Dense(classes_count, activation='softmax', name='fc1000')(x)
 	
 	return Model(input=model.input, output=predictions)
-    
+
 def compile_model(model):
-    model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='sparse_categorical_crossentropy')
+    model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='sparse_categorical_crossentropy', metrics=['mse', 'mae', 'mape', 'cosine'])
     return
 
 def train_model(model, train_generator, validation_generator, epochs):
@@ -135,3 +137,10 @@ print(train_generator.class_indices)
 save_model_to_h5(model, '.', 'model_with_weights.h5')
 #save_model_to_pb(model, '.', 'model_with_weights.pb', 'output')
 #save_class_labels(train_generator.class_indices, '.', 'labels.txt')
+
+# plot metrics
+pyplot.plot(history.history['mean_squared_error'])
+pyplot.plot(history.history['mean_absolute_error'])
+pyplot.plot(history.history['mean_absolute_percentage_error'])
+pyplot.plot(history.history['cosine_proximity'])
+pyplot.show()
