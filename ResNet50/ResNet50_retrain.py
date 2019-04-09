@@ -1,6 +1,6 @@
 #Retrain ResNet50 neural network model based on imagenet wheights
 
-#python3 ResNet50_retrain.py 4 5 "../../mushroom-images/Mushrooms_with_classes/" "../../mushroom-images/Mushrooms_with_classes/"
+#python3 ResNet50_retrain.py 4 10 "../../mushroom-images/Mushrooms_with_classes/" "../../mushroom-images/Mushrooms_with_classes/"
 
 from keras.applications.resnet50 import ResNet50
 from keras.preprocessing import image
@@ -14,6 +14,7 @@ from keras.models import Model
 from keras.layers import Flatten
 from keras.layers import Dense
 from keras import metrics
+from keras.callbacks import CSVLogger
 from matplotlib import pyplot
 import tensorflow as tf
 import numpy as np
@@ -36,27 +37,6 @@ number_of_epochs = int(sys.argv[2])
 train_dir = sys.argv[3]
 validate_dir = sys.argv[4]
 
-'''
-def create_trainable_resnet50(classes_count):
-    model = ResNet50(include_top=True, weights=None, input_tensor=None, input_shape=None, pooling=None, classes=classes_count)
-    for layer in model.layers:
-        layer.trainable = True
-    return model
-'''
-
-'''
-def create_trainable_resnet50(classes_count):
-	model = ResNet50(include_top=False, weights=None, input_shape=(224, 224, 3))
-
-	x = Flatten()(model.output)
-	predictions = Dense(classes_count, activation='softmax', name='fc1000')(x)
-	
-	model = Model(input=model.input, output=predictions)
-	for layer in model.layers:
-		layer.trainable = True
-	return model
-'''
-
 def create_trainable_resnet50(classes_count):
 	model = ResNet50(include_top=False, weights='imagenet', input_shape=(224, 224, 3))
 
@@ -75,14 +55,16 @@ def compile_model(model):
     return
 
 def train_model(model, train_generator, validation_generator, epochs):
-    model.fit_generator(
+    csv_logger = CSVLogger('ResNet50_log.csv', append=True, separator=';')
+    history = model.fit_generator(
             train_generator,
             steps_per_epoch=2000,
             epochs=epochs,
             validation_data=validation_generator,
             validation_steps=800,
-            verbose=2)
-    return
+            verbose=2,
+            callbacks=[csv_logger])
+    return history
 
 def get_data_generators(train_dir, validation_dir):
     train_datagen = image.ImageDataGenerator(
@@ -129,12 +111,12 @@ def save_model_to_h5(model, dir_path, file_name):
 model = create_trainable_resnet50(number_of_classes)
 compile_model(model)
 train_generator, validation_generator = get_data_generators(train_dir, validate_dir)
-train_model(model, train_generator, validation_generator, number_of_epochs)
+history = train_model(model, train_generator, validation_generator, number_of_epochs)
 compile_model(model)
 
 print(train_generator.class_indices)
 
-save_model_to_h5(model, '.', 'model_with_weights.h5')
+save_model_to_h5(model, '.', 'ResNet50_model_with_weights.h5')
 #save_model_to_pb(model, '.', 'model_with_weights.pb', 'output')
 #save_class_labels(train_generator.class_indices, '.', 'labels.txt')
 
