@@ -117,8 +117,8 @@ compile_model(model)
 print(train_generator.class_indices)
 
 save_model_to_h5(model, '.', 'ResNet50_model_with_weights.h5')
-#save_model_to_pb(model, '.', 'model_with_weights.pb', 'output')
-#save_class_labels(train_generator.class_indices, '.', 'labels.txt')
+#save_model_to_pb(model, 'export', 'model_with_weights.pb', 'output')
+#save_class_labels(train_generator.class_indices, 'export', 'labels.txt')
 
 # plot metrics
 pyplot.plot(history.history['mean_squared_error'])
